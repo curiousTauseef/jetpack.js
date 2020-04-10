@@ -4,6 +4,7 @@
 
 #include "ParserCommon.h"
 #include "ErrorMessage.h"
+#include "JsKeywordsContants.h"
 #include <fmt/format.h>
 
 namespace jetpack::parser {
@@ -11,6 +12,7 @@ namespace jetpack::parser {
 
     ParserCommon::ParserCommon(std::shared_ptr<ParserContext> state)
     : ctx(std::move(state)) {
+//        JsKeywordsContants::Init();
     }
 
     void ParserCommon::TolerateError(const std::string &message) {
@@ -32,7 +34,7 @@ namespace jetpack::parser {
 
     ParseError ParserCommon::UnexpectedToken(const Token &token) {
         string msg = ParseMessages::UnexpectedToken;
-        UString value;
+        IMString value;
 
         msg = (token.type_ == JsTokenType::EOF_) ? ParseMessages::UnexpectedEOS :
               (token.type_ == JsTokenType::Identifier) ? ParseMessages::UnexpectedIdentifier :
@@ -50,7 +52,7 @@ namespace jetpack::parser {
         }
         value = token.value_;
 
-        string final_message = fmt::format(msg, utils::To_UTF8(value));
+        string final_message = fmt::format(msg, value.ToString());
         return UnexpectedToken(token, final_message);
     }
 
@@ -221,7 +223,7 @@ namespace jetpack::parser {
         }
     }
 
-    bool ParserCommon::MatchContextualKeyword(const UString& keyword) {
+    bool ParserCommon::MatchContextualKeyword(const IMString& keyword) {
         Token& lookahead = ctx->lookahead_;
         return lookahead.type_ == JsTokenType::Identifier && lookahead.value_ == keyword;
     }

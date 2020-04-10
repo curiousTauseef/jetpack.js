@@ -81,7 +81,7 @@ namespace jetpack {
          */
         std::string path;
 
-        UString default_export_name;
+        IMString default_export_name;
 
         std::weak_ptr<ModuleResolver> module_resolver;
 
@@ -112,7 +112,7 @@ namespace jetpack {
 
         void CodeGenFromAst(const CodeGen::Config &config);
 
-        UString GetModuleVarName();
+        IMString GetModuleVarName();
 
         inline ExportManager& GetExportManager() {
             return ast->scope->export_manager;
@@ -126,7 +126,7 @@ namespace jetpack {
      */
     class ModuleResolver : public std::enable_shared_from_this<ModuleResolver> {
     public:
-        static std::u16string ReadFileStream(const std::string& filename);
+        static IMString ReadFileStream(const std::string& filename);
 
         ModuleResolver() : mod_counter_(0) {
             name_generator = ReadableNameGenerator::Make();
@@ -183,7 +183,7 @@ namespace jetpack {
         HashMap<std::string, Sp<ModuleFile>> modules_map_;
 
         json GetImportStat();
-        std::vector<std::tuple<Sp<ModuleFile>, UString>> GetAllExportVars();
+        std::vector<std::tuple<Sp<ModuleFile>, IMString>> GetAllExportVars();
 
         void RenameAllRootLevelVariable();
 
@@ -193,9 +193,9 @@ namespace jetpack {
 
     private:
         void TraverseModulePushExportVars(
-                std::vector<std::tuple<Sp<ModuleFile>, UString>>& arr,
+                std::vector<std::tuple<Sp<ModuleFile>, IMString>>& arr,
                 const Sp<ModuleFile>&,
-                HashSet<UString>* white_list);
+                HashSet<IMString>* white_list);
 
         void RenameAllRootLevelVariableTraverser(const Sp<ModuleFile>& mf,
                                                  std::int32_t& counter);
@@ -225,9 +225,9 @@ namespace jetpack {
         bool IsExternalImportModulePath(const std::string& path);
 
         std::optional<Sp<LocalExportInfo>>
-        FindLocalExportByPath(const std::string& path, const UString& export_name, std::set<std::int32_t>& visited);
+        FindLocalExportByPath(const std::string& path, const IMString& export_name, std::set<std::int32_t>& visited);
 
-        Sp<ExportNamedDeclaration> GenFinalExportDecl(const std::vector<std::tuple<Sp<ModuleFile>, UString>>&);
+        Sp<ExportNamedDeclaration> GenFinalExportDecl(const std::vector<std::tuple<Sp<ModuleFile>, IMString>>&);
 
         GlobalImportHandler global_import_handler_;
 

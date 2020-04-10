@@ -8,6 +8,7 @@
 #include <optional>
 #include <vector>
 #include <variant>
+#include <IMString.h>
 #include "../scope/Scope.h"
 
 namespace jetpack {
@@ -50,7 +51,7 @@ namespace jetpack {
     public:
         AssignmentExpression();
 
-        UString operator_;
+        IMString operator_;
         Sp<Pattern> left;
         Sp<Expression> right;
 
@@ -77,7 +78,7 @@ namespace jetpack {
     public:
         BinaryExpression();
 
-        UString operator_;
+        IMString operator_;
         Sp<Expression> left;
         Sp<Expression> right;
 
@@ -183,7 +184,7 @@ namespace jetpack {
         Directive();
 
         Sp<Expression> expression;
-        UString directive;
+        IMString directive;
 
     };
 
@@ -321,7 +322,7 @@ namespace jetpack {
     public:
         Identifier();
 
-        UString name;
+        IMString name;
 
     };
 
@@ -402,9 +403,9 @@ namespace jetpack {
 
         bool boolean_ = false;
         double double_ = 0;
-        UString str_;
+        IMString str_;
 
-        UString raw;
+        IMString raw;
 
     };
 
@@ -434,7 +435,7 @@ namespace jetpack {
         Module();
 
         std::vector<Sp<SyntaxNode>> body;
-        UString source_type;
+        IMString source_type;
         std::vector<Sp<Comment>> comments;
 
         std::unique_ptr<ModuleScope> scope;
@@ -483,8 +484,8 @@ namespace jetpack {
     public:
         RegexLiteral();
 
-        UString value;
-        UString raw;
+        IMString value;
+        IMString raw;
 
     };
 
@@ -509,7 +510,7 @@ namespace jetpack {
         Script();
 
         std::vector<Sp<SyntaxNode>> body;
-        UString source_type;
+        IMString source_type;
         std::vector<Sp<Comment>> comments;
 
         std::unique_ptr<Scope> scope;
@@ -584,8 +585,8 @@ namespace jetpack {
     public:
         TemplateElement();
 
-        UString cooked;
-        UString raw;
+        IMString cooked;
+        IMString raw;
         bool tail = false;
 
     };
@@ -628,7 +629,7 @@ namespace jetpack {
     public:
         UnaryExpression();
 
-        UString operator_;
+        IMString operator_;
         Sp<Expression> argument;
         bool prefix = false;
 
@@ -638,7 +639,7 @@ namespace jetpack {
     public:
         UpdateExpression();
 
-        UString operator_;
+        IMString operator_;
         Sp<Expression> argument;
         bool prefix = false;
 
@@ -739,7 +740,7 @@ namespace jetpack {
     public:
         JSXIdentifier();
 
-        UString name;
+        IMString name;
 
     };
 
@@ -792,8 +793,8 @@ namespace jetpack {
     public:
         JSXText();
 
-        UString value;
-        UString raw;
+        IMString value;
+        IMString raw;
 
     };
 

@@ -17,7 +17,7 @@ namespace jetpack::parser {
         public:
             static Config Default();
 
-            std::optional<UString> source;
+            std::optional<IMString> source;
             bool tokens;
             bool comment;
             bool tolerant;
@@ -41,7 +41,7 @@ namespace jetpack::parser {
             uint32_t column = 0;
         };
 
-        ParserContext(Sp<UString> src, const Config& config);
+        ParserContext(IMString src, const Config& config);
         ParserContext(const ParserContext& ps) = delete;
         ParserContext(ParserContext&& ps) = delete;
 
@@ -53,7 +53,7 @@ namespace jetpack::parser {
         std::unique_ptr<Scanner> scanner_;
 
         Sp<ParseErrorHandler> error_handler_;
-        Sp<UString> source_;
+        IMString source_;
         bool has_line_terminator_;
 
         std::stack<Token> tokens_;
@@ -74,7 +74,7 @@ namespace jetpack::parser {
         bool in_function_body_ = false;
         bool in_iteration_ = false;
         bool in_switch_ = false;
-        std::unique_ptr<std::unordered_set<UString>> label_set_;
+        std::unique_ptr<std::unordered_set<IMString>> label_set_;
         bool strict_ = false;
 
     };

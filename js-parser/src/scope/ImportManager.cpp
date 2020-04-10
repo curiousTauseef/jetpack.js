@@ -4,6 +4,7 @@
 
 #include "ImportManager.h"
 #include "../parser/SyntaxNodes.h"
+#include "../parser/JsKeywordsContants.h"
 
 namespace jetpack {
 
@@ -34,7 +35,7 @@ namespace jetpack {
                     ImportIdentifierInfo importInfo;
                     importInfo.is_namespace = false;
                     importInfo.local_name = importDefault->local->name;
-                    importInfo.source_name = u"default";
+                    importInfo.source_name = S_DEFAULT;
                     importInfo.module_name = importDecl->source->raw;
 
                     id_map[importInfo.local_name] = importInfo;

@@ -135,7 +135,7 @@ namespace jetpack::parser {
                         ThrowUnexpectedToken(ctx->lookahead_);
                     }
                     auto new_right = Alloc<Identifier>();
-                    new_right->name = u"yield";
+                    new_right->name = IMString::FromUTF16(u"yield");
                     node->right = new_right;
                 }
             } else if (async_arrow && param->type == SyntaxNodeType::Identifier) {
@@ -244,7 +244,7 @@ namespace jetpack::parser {
     }
 
     bool Parser::IsStartOfExpression() {
-        UString value = ctx->lookahead_.value_;
+        IMString value = ctx->lookahead_.value_;
 
         if (IsPunctuatorToken(ctx->lookahead_.type_)) {
             switch (ctx->lookahead_.type_) {
@@ -333,10 +333,10 @@ namespace jetpack::parser {
     }
 
     void Parser::ValidateParam(parser::ParserCommon::FormalParameterOptions &options, const Token &param,
-                               const UString &name) {
+                               const IMString &name) {
         Scanner& scanner = *ctx->scanner_;
 
-        UString key = UString(u"$") + name;
+        IMString key = IMString::FromUTF16(u"$") + name;
         if (ctx->strict_) {
             if (scanner.IsRestrictedWord(name)) {
                 options.stricted = param;
@@ -587,7 +587,7 @@ namespace jetpack::parser {
 
             kind = VarKind::Init;
             if (Match(JsTokenType::Colon) && !is_async) {
-                if (!computed && IsPropertyKey(*key, u"__proto__")) {
+                if (!computed && IsPropertyKey(*key, IMString::FromUTF16(u"__proto__"))) {
                     if (has_proto) {
                         TolerateError(ParseMessages::DuplicateProtoProperty);
                     }
@@ -728,7 +728,7 @@ namespace jetpack::parser {
         fun_scope->SetParent(&parent_scope);
         auto& scope = *fun_scope.get();
 
-        bool is_async = MatchContextualKeyword(u"async");
+        bool is_async = MatchContextualKeyword(S_ASYNC);
         if (is_async) NextToken();
 
         Expect(JsTokenType::K_Function);
@@ -926,13 +926,13 @@ namespace jetpack::parser {
 
         auto marker = CreateStartMarker();
         Sp<Expression> expr = ParseExpression(scope);
-        UString directive;
+        IMString directive;
         if (expr->type == SyntaxNodeType::Literal) {
-            directive = token.value_.substr(1, token.value_.size() - 1);
+            directive = token.value_.Slice(1, token.value_.Size());
         }
         ConsumeSemicolon();
 
-        if (!directive.empty()) {
+        if (!directive.Empty()) {
             auto node = Alloc<Directive>();
             node->expression = expr;
             node->directive = directive;
@@ -984,7 +984,7 @@ namespace jetpack::parser {
         bool prev_in_switch = ctx->in_switch_;
         bool prev_in_fun_body = ctx->in_function_body_;
 
-        ctx->label_set_ = make_unique<unordered_set<UString>>();
+        ctx->label_set_ = make_unique<unordered_set<IMString>>();
         ctx->in_iteration_ = false;
         ctx->in_switch_ = false;
         ctx->in_function_body_ = true;
@@ -1131,7 +1131,7 @@ namespace jetpack::parser {
     Sp<Expression> Parser::ParseLeftHandSideExpressionAllowCall(Scope& scope) {
         Token start_token = ctx->lookahead_;
         auto start_marker = CreateStartMarker();
-        bool maybe_async = MatchContextualKeyword(u"async");
+        bool maybe_async = MatchContextualKeyword(S_ASYNC);
 
         bool prev_allow_in = ctx->allow_in_;
         ctx->allow_in_ = true;
@@ -1258,7 +1258,7 @@ namespace jetpack::parser {
         auto marker = CreateStartMarker();
         auto node = make_shared<Module>();
         node->body = ParseDirectivePrologues(*node->scope.get());
-        node->source_type = u"module";
+        node->source_type = S_MODULE;
         while (ctx->lookahead_.type_ != JsTokenType::EOF_) {
             node->body.push_back(ParseStatementListItem(*node->scope.get()));
         }
@@ -1275,7 +1275,7 @@ namespace jetpack::parser {
         auto start_marker = CreateStartMarker();
         auto node = Alloc<Script>();
         node->body = ParseDirectivePrologues(*node->scope);
-        node->source_type = u"script";
+        node->source_type = S_SCRIPT;
         while (ctx->lookahead_.type_ != JsTokenType::EOF_) {
             node->body.push_back(ParseStatementListItem(*node->scope));
         }
@@ -1483,7 +1483,7 @@ namespace jetpack::parser {
         fun_scope->SetParent(&parent_scope);
         auto& scope = *fun_scope;
 
-        bool is_async = MatchContextualKeyword(u"async");
+        bool is_async = MatchContextualKeyword(S_ASYNC);
         if (is_async) {
             NextToken();
         }
@@ -1579,10 +1579,10 @@ namespace jetpack::parser {
             NextToken();
 
             auto id = dynamic_pointer_cast<Identifier>(expr);
-            UString key = UString(u"$") + id->name;
+            IMString key = IMString::FromUTF16(u"$") + id->name;
 
             if (ctx->label_set_->find(key) != ctx->label_set_->end()) {
-                ThrowError(ParseMessages::Redeclaration, string("Label: ") + utils::To_UTF8(id->name));
+                ThrowError(ParseMessages::Redeclaration, string("Label: ") + id->name.ToString());
             }
             ctx->label_set_->insert(key);
 
@@ -1627,9 +1627,9 @@ namespace jetpack::parser {
             Scope scope;
             Sp<Identifier> id = ParseVariableIdentifier(scope, VarKind::Invalid);
 
-            UString key = UString(u"$") + id->name;
+            IMString key = IMString::FromUTF16(u"$") + id->name;
             if (auto& label_set = *ctx->label_set_; label_set.find(key) == label_set.end()) {
-                ThrowError(ParseMessages::UnknownLabel, utils::To_UTF8(id->name));
+                ThrowError(ParseMessages::UnknownLabel, id->name.ToString());
             }
             label = id;
         }
@@ -1656,9 +1656,9 @@ namespace jetpack::parser {
             auto id = ParseVariableIdentifier(scope, VarKind::Invalid);
             node->label = id;
 
-            UString key = UString(u"$") + id->name;
+            IMString key = IMString::FromUTF16(u"$") + id->name;
             if (auto& label_set = *ctx->label_set_; label_set.find(key) == label_set.end()) {
-                ThrowError(ParseMessages::UnknownLabel, utils::To_UTF8(id->name));
+                ThrowError(ParseMessages::UnknownLabel, id->name.ToString());
             }
         }
 
@@ -1748,7 +1748,7 @@ namespace jetpack::parser {
                     left = *init;
                     right = ParseExpression(scope);
                     init.reset();
-                } else if (declarations.size() == 1 && !declarations[0]->init && MatchContextualKeyword(u"of")) { // of
+                } else if (declarations.size() == 1 && !declarations[0]->init && MatchContextualKeyword(S_OF)) { // of
                     auto node = Alloc<VariableDeclaration>();
                     node->declarations = declarations;
                     node->kind = VarKind::Var;
@@ -1799,7 +1799,7 @@ namespace jetpack::parser {
                         left = *init;
                         right = ParseExpression(scope);
                         init.reset();
-                    } else if (declarations.size() == 1 && !declarations[0]->init && MatchContextualKeyword(u"of")) {
+                    } else if (declarations.size() == 1 && !declarations[0]->init && MatchContextualKeyword(S_OF)) {
                         auto node = Alloc<VariableDeclaration>();
                         node->declarations = declarations;
                         node->kind = kind;
@@ -1837,7 +1837,7 @@ namespace jetpack::parser {
                     left = *init;
                     right = ParseExpression(scope);
                     init.reset();
-                } else if (MatchContextualKeyword(u"of")) {
+                } else if (MatchContextualKeyword(S_OF)) {
                     if (!ctx->is_assignment_target_ || (*init)->type == SyntaxNodeType::AssignmentExpression) {
                         TolerateError(ParseMessages::InvalidLHSInForIn);
                     }
@@ -2040,11 +2040,11 @@ namespace jetpack::parser {
         std::vector<Token> params;
         node->param = ParsePattern(scope, params);
 
-        std::unordered_set<UString> param_set;
+        std::unordered_set<IMString> param_set;
         for (auto& token : params) {
-            UString key = UString(u"$") + token.value_;
+            IMString key = IMString::FromUTF16(u"$") + token.value_;
             if (param_set.find(key) != param_set.end()) {
-                TolerateError(string(ParseMessages::DuplicateBinding) + ": " + utils::To_UTF8(token.value_));
+                TolerateError(string(ParseMessages::DuplicateBinding) + ": " + token.value_.ToString());
             }
             param_set.insert(key);
         }
@@ -2185,7 +2185,7 @@ namespace jetpack::parser {
         }
 
         if (kind == VarKind::Const) {
-            if (!Match(JsTokenType::K_In) && !MatchContextualKeyword(u"of")) {
+            if (!Match(JsTokenType::K_In) && !MatchContextualKeyword(S_OF)) {
                 if (Match(JsTokenType::Assign)) {
                     NextToken();
                     node->init = IsolateCoverGrammar<Expression>([this, &scope] {
@@ -2288,7 +2288,7 @@ namespace jetpack::parser {
 
         scope.AddUnresolvedId(local);
 
-        if (MatchContextualKeyword(u"as")) {
+        if (MatchContextualKeyword(S_AS)) {
             NextToken();
             exported = ParseIdentifierName();
         }
@@ -2329,7 +2329,7 @@ namespace jetpack::parser {
                        "resolve export failed");
 
                 export_decl = Finalize(start_marker, node);
-            } else if (MatchContextualKeyword(u"async")) {
+            } else if (MatchContextualKeyword(S_ASYNC)) {
                 auto node = Alloc<ExportDefaultDeclaration>();
                 if (MatchAsyncFunction()) {
                     node->declaration = ParseFunctionDeclaration(scope, true);
@@ -2342,8 +2342,8 @@ namespace jetpack::parser {
 
                 export_decl = Finalize(start_marker, node);
             } else {
-                if (MatchContextualKeyword(u"from")) {
-                    ThrowError(ParseMessages::UnexpectedToken, utils::To_UTF8(ctx->lookahead_.value_));
+                if (MatchContextualKeyword(S_FROM)) {
+                    ThrowError(ParseMessages::UnexpectedToken, ctx->lookahead_.value_.ToString());
                 }
                 Sp<SyntaxNode> decl;
                 if (Match(JsTokenType::LeftBracket)) {
@@ -2364,14 +2364,14 @@ namespace jetpack::parser {
             }
         } else if (Match(JsTokenType::Mul)) {
             NextToken();
-            if (!MatchContextualKeyword(u"from")) {
+            if (!MatchContextualKeyword(S_FROM)) {
                 string message;
-                if (!ctx->lookahead_.value_.empty()) {
+                if (!ctx->lookahead_.value_.Empty()) {
                     message = ParseMessages::UnexpectedToken;
                 } else {
                     message = ParseMessages::MissingFromClause;
                 }
-                ThrowError(message, utils::To_UTF8(ctx->lookahead_.value_));
+                ThrowError(message, ctx->lookahead_.value_.ToString());
             }
             NextToken();
             auto node = Alloc<ExportAllDeclaration>();
@@ -2429,18 +2429,18 @@ namespace jetpack::parser {
             }
             Expect(JsTokenType::RightBracket);
 
-            if (MatchContextualKeyword(u"from")) {
+            if (MatchContextualKeyword(S_FROM)) {
                 NextToken();
                 node->source = ParseModuleSpecifier();
                 ConsumeSemicolon();
             } else if (is_export_from_id) {
                 string message;
-                if (!ctx->lookahead_.value_.empty()) {
+                if (!ctx->lookahead_.value_.Empty()) {
                     message = ParseMessages::UnexpectedToken;
                 } else {
                     message = ParseMessages::MissingFromClause;
                 }
-                ThrowError(message, utils::To_UTF8(ctx->lookahead_.value_));
+                ThrowError(message, ctx->lookahead_.value_.ToString());
             } else {
                 ConsumeSemicolon();
             }
@@ -2717,7 +2717,7 @@ namespace jetpack::parser {
             node->right = IsolateCoverGrammar<Expression>([this, &scope, &node] {
                 return ParseExponentiationExpression(scope);
             });
-            node->operator_ = u"**";
+            node->operator_ = IMString::FromUTF16(u"**");
             expr = Finalize(start, node);
         }
 
@@ -2747,7 +2747,7 @@ namespace jetpack::parser {
             }
             ctx->is_assignment_target_ = false;
             ctx->is_binding_element_ = false;
-        } else if (ctx->await_ && MatchContextualKeyword(u"await")) {
+        } else if (ctx->await_ && MatchContextualKeyword(S_AWAIT)) {
             expr = ParseAwaitExpression(scope);
         } else {
             expr = ParseUpdateExpression(scope);
@@ -2926,14 +2926,14 @@ namespace jetpack::parser {
                 ThrowUnexpectedToken(NextToken());
             }
 
-            if (!MatchContextualKeyword(u"from")) {
+            if (!MatchContextualKeyword(S_FROM)) {
                 string message;
-                if (!ctx->lookahead_.value_.empty()) {
+                if (!ctx->lookahead_.value_.Empty()) {
                     message = ParseMessages::UnexpectedToken;
                 } else {
                     message = ParseMessages::MissingFromClause;
                 }
-                ThrowError(message, utils::To_UTF8(ctx->lookahead_.value_));
+                ThrowError(message, ctx->lookahead_.value_.ToString());
             }
             NextToken();
             src = ParseModuleSpecifier();
@@ -2982,7 +2982,7 @@ namespace jetpack::parser {
             imported = ParseVariableIdentifier(LeftValueScope::default_, VarKind::Invalid);
             local = std::make_shared<Identifier>();
             (*local) = (*imported);
-            if (MatchContextualKeyword(u"as")) {
+            if (MatchContextualKeyword(S_AS)) {
                 NextToken();
                 local = ParseVariableIdentifier(scope, VarKind::Invalid);
             }
@@ -2991,7 +2991,7 @@ namespace jetpack::parser {
             imported = ParseIdentifierName();
             local = std::make_shared<Identifier>();
             (*local) = (*imported);
-            if (MatchContextualKeyword(u"as")) {
+            if (MatchContextualKeyword(S_AS)) {
                 NextToken();
                 local = ParseVariableIdentifier(scope, VarKind::Invalid);
             } else {
@@ -3034,7 +3034,7 @@ namespace jetpack::parser {
         auto start_marker = CreateStartMarker();
 
         Expect(JsTokenType::Mul);
-        if (!MatchContextualKeyword(u"as")) {
+        if (!MatchContextualKeyword(S_AS)) {
             ThrowError(ParseMessages::NoAsAfterImportNamespace);
         }
         NextToken();
@@ -3552,10 +3552,10 @@ namespace jetpack::parser {
         }
 
         if (!computed) {
-            if (is_static && IsPropertyKey(*key, u"prototype")) {
+            if (is_static && IsPropertyKey(*key, S_PROTOTYPE)) {
                 ThrowUnexpectedToken(token, ParseMessages::StaticPrototype);
             }
-            if (!is_static && IsPropertyKey(*key, u"constructor")) {
+            if (!is_static && IsPropertyKey(*key, S_CONSTRUCTOR)) {
 //                TODO: generator
 //                if (kind != VarKind::Method || !method || (value.has_value() &&))
                 if (has_ctor) {
@@ -3732,7 +3732,7 @@ namespace jetpack::parser {
         return false;
     }
 
-    bool Parser::IsPropertyKey(const Sp<SyntaxNode> &key, const UString &name) {
+    bool Parser::IsPropertyKey(const Sp<SyntaxNode> &key, const IMString &name) {
         if (key->type == SyntaxNodeType::Identifier) {
             return dynamic_pointer_cast<Identifier>(key)->name == name;
         }

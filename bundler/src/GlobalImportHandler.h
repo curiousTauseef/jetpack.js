@@ -18,16 +18,16 @@ namespace jetpack {
         std::int32_t id = -1;
 
         bool has_namespace = false;
-        UString ns_import_name;
+        IMString ns_import_name;
 
         bool has_default = false;
-        UString default_local_name;
+        IMString default_local_name;
 
-        UString path;
+        IMString path;
 
-        std::vector<UString> names;
+        std::vector<IMString> names;
 
-        HashMap<UString, UString> alias_map;
+        HashMap<IMString, IMString> alias_map;
 
     };
 
@@ -54,7 +54,7 @@ namespace jetpack {
          */
         std::set<std::uintptr_t> external_import_ptrs;
 
-        HashMap<UString, GlobalImportInfo> import_infos;
+        HashMap<IMString, GlobalImportInfo> import_infos;
 
         std::vector<Sp<ImportDeclaration>> gen_import_decls;
 

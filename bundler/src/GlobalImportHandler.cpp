@@ -3,25 +3,26 @@
 //
 
 #include <algorithm>
+#include <IMString.h>
 #include "GlobalImportHandler.h"
 
 namespace jetpack {
 
-    inline Sp<Identifier> MakeId(const UString& content) {
+    inline Sp<Identifier> MakeId(const IMString& content) {
         auto id = std::make_shared<Identifier>();
         id->name = content;
         return id;
     }
 
     inline Sp<Identifier> MakeId(const std::string& content) {
-        return MakeId(utils::To_UTF16(content));
+        return MakeId(IMString::FromUTF8(content));
     }
 
-    inline Sp<Literal> MakeStringLiteral(const UString& str) {
+    inline Sp<Literal> MakeStringLiteral(const IMString& str) {
         auto lit = std::make_shared<Literal>();
         lit->ty = Literal::Ty::String;
         lit->str_ = str;
-        lit->raw = u"\"" + str + u"\"";
+        lit->raw = IMString::FromUTF8("\"") + str + IMString::FromUTF8("\"");
         return lit;
     }
 
@@ -148,7 +149,7 @@ namespace jetpack {
                     import_decl->specifiers.push_back(std::move(default_spec));
                 }
 
-                HashSet<UString> visited_names;
+                HashSet<IMString> visited_names;
 
                 for (auto& name : import_info->names) {
                     if (visited_names.find(name) != visited_names.end()) {

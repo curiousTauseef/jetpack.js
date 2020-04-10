@@ -5,11 +5,12 @@
 #pragma once
 
 #include "Token.h"
+#include <IMString.h>
 #include <utility>
 
 struct Comment {
     bool multi_line_;
-    UString value_;
+    jetpack::IMString value_;
     std::pair<std::uint32_t, std::uint32_t> range_;
     SourceLocation loc_;
 

@@ -4,6 +4,7 @@
 #pragma once
 
 #include <string>
+#include <IMString.h>
 #include <utility>
 #include <Utils.h>
 
@@ -155,7 +156,7 @@ public:
 class Token {
 public:
     JsTokenType type_ = JsTokenType::Invalid;
-    UString value_;
+    jetpack::IMString value_;
     SourceLocation loc_;
     std::uint32_t line_number_;
     std::uint32_t line_start_;
@@ -163,6 +164,6 @@ public:
     bool octal_ = false;
     bool head_ = false;
     bool tail_ = false;
-    UString cooked_;
+    jetpack::IMString cooked_;
 
 };

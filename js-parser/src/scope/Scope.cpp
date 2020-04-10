@@ -9,7 +9,7 @@
 namespace jetpack {
 
     Scope::PVar
-    Scope::RecursivelyFindVariable(const UString &var_name) {
+    Scope::RecursivelyFindVariable(const IMString &var_name) {
         auto iter = own_variables.find(var_name);
         if (iter != own_variables.end()) {
             return iter->second;
@@ -36,7 +36,7 @@ namespace jetpack {
                 var = iter->second;
             } else {
                 VariableExistsError err;
-                err.name = iter->second->name;
+                err.name = iter->second->name.ToString();
                 if (iter->second->identifiers.empty()) {
                     throw std::runtime_error("identifiers can not be empty");
                 }
@@ -82,7 +82,7 @@ namespace jetpack {
         }
     }
 
-    bool Scope::BatchRenameSymbols(const std::vector<std::tuple<UString, UString>>& changeset) {
+    bool Scope::BatchRenameSymbols(const std::vector<std::tuple<IMString, IMString>>& changeset) {
         std::vector<PVar> buffer;
         buffer.reserve(changeset.size());
 
@@ -120,7 +120,7 @@ namespace jetpack {
     ModuleScope::ModuleScope() : Scope(ScopeType::Module) {
     };
 
-    bool ModuleScope::BatchRenameSymbols(const std::vector<std::tuple<UString, UString>>& changeset) {
+    bool ModuleScope::BatchRenameSymbols(const std::vector<std::tuple<IMString, IMString>>& changeset) {
         if (!Scope::BatchRenameSymbols(changeset)) {
             return false;
         }

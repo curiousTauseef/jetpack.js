@@ -3,6 +3,7 @@
 //
 
 #include "ExportManager.h"
+#include "../parser/JsKeywordsContants.h"
 #include "../parser/SyntaxNodes.h"
 #include "../parser/BaseNodes.h"
 
@@ -40,7 +41,7 @@ namespace jetpack {
 
     ExportManager::EC ExportManager::ResolveDefaultDecl(const std::shared_ptr<ExportDefaultDeclaration>& decl) {
         auto info = std::make_shared<LocalExportInfo>();
-        info->export_name = u"default";
+        info->export_name = S_DEFAULT;
         info->default_export_ast = { decl };
 
         AddLocalExport(info);

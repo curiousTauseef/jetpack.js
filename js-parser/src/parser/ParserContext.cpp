@@ -19,7 +19,7 @@ namespace jetpack::parser {
         };
     }
 
-    ParserContext::ParserContext(Sp<UString> src, const Config& config):
+    ParserContext::ParserContext(IMString src, const Config& config):
         config_(config), source_(std::move(src)) {
         error_handler_ = std::make_shared<ParseErrorHandler>();
 
@@ -43,7 +43,7 @@ namespace jetpack::parser {
         in_switch_ = false;
         strict_ = false;
 
-        label_set_ = std::make_unique<std::unordered_set<UString>>();
+        label_set_ = std::make_unique<std::unordered_set<IMString>>();
     }
 
 }

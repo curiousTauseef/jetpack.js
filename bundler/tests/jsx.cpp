@@ -14,13 +14,12 @@
 using namespace jetpack;
 using namespace jetpack::parser;
 
-inline std::string ParseJSXAndCodeGen(UString content) {
-    auto src = std::make_shared<UString>();
+inline std::string ParseJSXAndCodeGen(const std::string& u8content) {
+    IMString src = IMString::FromUTF8(u8content);
     ParserContext::Config config = ParserContext::Config::Default();
     config.jsx = true;
     config.transpile_jsx = true;
     auto ctx = std::make_shared<ParserContext>(src, config);
-    *src = std::move(content);
     Parser parser(ctx);
 
     auto mod = parser.ParseModule();
@@ -39,7 +38,7 @@ TEST(JSX, TranspileSimple1) {
     std::string expected =
         "const result = React.createElement(\"a\");\n";
 
-    EXPECT_EQ(ParseJSXAndCodeGen(utils::To_UTF16(src)), expected);
+    EXPECT_EQ(ParseJSXAndCodeGen(src), expected);
 }
 
 TEST(JSX, TranspileSimple2) {
@@ -49,7 +48,7 @@ TEST(JSX, TranspileSimple2) {
     std::string expected =
         "const result = React.createElement(\"a\");\n";
 
-    EXPECT_EQ(ParseJSXAndCodeGen(utils::To_UTF16(src)), expected);
+    EXPECT_EQ(ParseJSXAndCodeGen(src), expected);
 }
 
 TEST(JSX, TranspileSimple3) {
@@ -61,7 +60,7 @@ TEST(JSX, TranspileSimple3) {
         "  name: \"hello\"\n"
         "});\n";
 
-    EXPECT_EQ(ParseJSXAndCodeGen(utils::To_UTF16(src)), expected);
+    EXPECT_EQ(ParseJSXAndCodeGen(src), expected);
 }
 
 TEST(JSX, TranspileSimple4) {
@@ -73,7 +72,7 @@ TEST(JSX, TranspileSimple4) {
         "  name: 1 + 1\n"
         "});\n";
 
-    EXPECT_EQ(ParseJSXAndCodeGen(utils::To_UTF16(src)), expected);
+    EXPECT_EQ(ParseJSXAndCodeGen(src), expected);
 }
 
 TEST(JSX, TranspileSpread1) {
@@ -86,7 +85,7 @@ TEST(JSX, TranspileSpread1) {
         "  ...props\n"
         "});\n";
 
-    EXPECT_EQ(ParseJSXAndCodeGen(utils::To_UTF16(src)), expected);
+    EXPECT_EQ(ParseJSXAndCodeGen(src), expected);
 }
 
 TEST(JSX, TranspileChildren) {
@@ -96,7 +95,7 @@ TEST(JSX, TranspileChildren) {
     std::string expected =
         "const result = React.createElement(\"a\", null, \"aaa\");\n";
 
-    EXPECT_EQ(ParseJSXAndCodeGen(utils::To_UTF16(src)), expected);
+    EXPECT_EQ(ParseJSXAndCodeGen(src), expected);
 }
 
 TEST(JSX, TranspileRecursively) {
@@ -106,5 +105,5 @@ TEST(JSX, TranspileRecursively) {
     std::string expected =
         "const result = React.createElement(\"a\", null, React.createElement(\"b\"));\n";
 
-    EXPECT_EQ(ParseJSXAndCodeGen(utils::To_UTF16(src)), expected);
+    EXPECT_EQ(ParseJSXAndCodeGen(src), expected);
 }

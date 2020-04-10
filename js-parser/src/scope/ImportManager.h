@@ -6,6 +6,7 @@
 
 #include <memory>
 #include <robin_hood.h>
+#include "IMString.h"
 #include "Utils.h"
 #include "../parser/NodeTypes.h"
 
@@ -14,9 +15,9 @@ namespace jetpack {
     class ImportIdentifierInfo {
     public:
         bool is_namespace;
-        UString local_name;
-        UString source_name;
-        UString module_name;
+        IMString local_name;
+        IMString source_name;
+        IMString module_name;
 
     };
 
@@ -37,7 +38,7 @@ namespace jetpack {
 
         ImportManager& operator=(const ImportManager&) = delete;
 
-        robin_hood::unordered_map<UString, ImportIdentifierInfo> id_map;
+        robin_hood::unordered_map<IMString, ImportIdentifierInfo> id_map;
 
         EC ResolveImportDecl(const std::shared_ptr<ImportDeclaration>&);
 

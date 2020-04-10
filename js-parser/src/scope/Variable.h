@@ -6,6 +6,7 @@
 
 #include <vector>
 #include <memory>
+#include <IMString.h>
 #include "../macros.h"
 #include "Utils.h"
 #include "../parser/NodeTypes.h"
@@ -40,7 +41,7 @@ namespace jetpack {
 //        bool is_mutated = false;
         Scope* scope = nullptr;
 
-        UString name;
+        IMString name;
 
         /**
          * for imported and exported variable

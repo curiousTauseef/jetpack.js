@@ -7,18 +7,18 @@
 
 namespace jetpack {
 
-    inline Sp<Literal> MakeStringLiteral(const UString& str) {
+    inline Sp<Literal> MakeStringLiteral(const IMString& str) {
         auto lit = std::make_shared<Literal>();
         lit->ty = Literal::Ty::String;
         lit->str_ = str;
-        lit->raw = u"\"" + str + u"\"";
+        lit->raw = IMString::FromUTF16(u"\"") + str + IMString::FromUTF16(u"\"");
         return lit;
     }
 
     inline Sp<Literal> MakeIntLiteral(std::int32_t tmp) {
         auto lit = std::make_shared<Literal>();
         lit->ty = Literal::Ty::Double;
-        lit->str_ = utils::To_UTF16(std::to_string(tmp));
+        lit->str_ = IMString::FromUTF8(std::to_string(tmp));
         lit->raw = lit->str_;
         return lit;
     }
@@ -35,14 +35,14 @@ namespace jetpack {
             auto right_lit = std::dynamic_pointer_cast<Literal>(binary->right);
 
             if (binary->operator_ == u"+" && left_lit->ty == Literal::Ty::String && right_lit->ty == Literal::Ty::String) {
-                UString result = left_lit->str_ + right_lit->str_;
+                IMString result = left_lit->str_ + right_lit->str_;
                 return MakeStringLiteral(result);
             } else if (left_lit->ty == Literal::Ty::Double && right_lit->ty == Literal::Ty::Double) {
-                std::int32_t left_int = utils::ToSimpleInt(left_lit->str_);
+                std::int32_t left_int = left_lit->str_.ToSimpleInt();
                 if (left_int < 0) {
                     return binary;
                 }
-                std::int32_t right_int = utils::ToSimpleInt(right_lit->str_);
+                std::int32_t right_int = right_lit->str_.ToSimpleInt();
                 if (right_int < 0) {
                     return binary;
                 }

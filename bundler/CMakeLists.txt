@@ -51,6 +51,7 @@ link_libraries(bundle-utils js-parser fmt)
 add_executable(jetpack ${SOURCE_FILES} src/main.cpp)
 
 add_executable(jetpack-test ${SOURCE_FILES}
+        tests/imstring.cpp
         tests/scope.cpp
         tests/resolve.cpp
         tests/codegen.cpp

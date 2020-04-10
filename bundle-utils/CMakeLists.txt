@@ -4,6 +4,9 @@ project(bundle-utils)
 set(CMAKE_CXX_STANDARD 17)
 
 add_library(${PROJECT_NAME} STATIC
+        "src/GenericHash.hpp"
+        "src/IMString.h"
+        "src/IMString.cpp"
         "src/Path.h"
         "src/Utils.h"
         "src/Utils.cpp")

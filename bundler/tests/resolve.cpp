@@ -19,10 +19,10 @@ using namespace jetpack::parser;
  */
 TEST(MinifyNameGenerator, Next) {
     auto gen = MinifyNameGenerator::Make();
-    std::unordered_set<std::u16string> gen_set;
+    std::unordered_set<IMString> gen_set;
 
     for (int i = 0; i < 10000; i++) {
-        auto next_str_opt = gen->Next(u"");
+        auto next_str_opt = gen->Next(IMString());
         EXPECT_TRUE(next_str_opt.has_value());
 //        std::cout << utils::To_UTF8(next_str) << std::endl;
         EXPECT_TRUE(gen_set.find(*next_str_opt) == gen_set.end());
@@ -35,10 +35,9 @@ inline std::string ReplaceDefault(const std::string& src) {
     auto mod = std::make_shared<ModuleFile>();
     mod->module_resolver = resolver;
 
-    auto u16src = std::make_shared<UString>();
+    IMString u16src = IMString::FromUTF8(src);
     ParserContext::Config config = ParserContext::Config::Default();
     auto ctx = std::make_shared<ParserContext>(u16src, config);
-    *u16src = utils::To_UTF16(src);
     Parser parser(ctx);
 
     mod->ast = parser.ParseModule();

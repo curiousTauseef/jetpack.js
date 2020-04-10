@@ -75,8 +75,8 @@ namespace jetpack {
 #endif
         }
 
-        inline void Write(const UString& w_str, Sp<SyntaxNode> node = nullptr) {
-            Write(utils::To_UTF8(w_str), node);
+        inline void Write(const IMString& w_str, Sp<SyntaxNode> node = nullptr) {
+            Write(w_str.ToString(), node);
 #ifdef DEBUG
             output.flush();
 #endif

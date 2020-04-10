@@ -10,6 +10,7 @@
 #include "ParserCommon.h"
 #include "ErrorMessage.h"
 #include "NodesSize.h"
+#include "JsKeywordsContants.h"
 
 #define ASSERT_NOT_NULL(EXPR, MSG) if ((EXPR) == nullptr) { \
         LogError(std::string(#EXPR) + " should not be nullptr " + MSG); \
@@ -162,7 +163,7 @@ namespace jetpack::parser {
 
         FormalParameterOptions ParseFormalParameters(Scope& scope, std::optional<Token> first_restricted = std::nullopt);
         void ParseFormalParameter(Scope& scope, FormalParameterOptions& option);
-        void ValidateParam(FormalParameterOptions& option, const Token& param, const UString& name);
+        void ValidateParam(FormalParameterOptions& option, const Token& param, const IMString& name);
         bool IsStartOfExpression();
 
         Sp<RestElement> ParseRestElement(Scope& scope, std::vector<Token>& params);
@@ -245,7 +246,7 @@ namespace jetpack::parser {
 
         std::vector<Sp<MethodDefinition>> ParseClassElementList(Scope& scope);
 
-        bool IsPropertyKey(const Sp<SyntaxNode>& key, const UString& name);
+        bool IsPropertyKey(const Sp<SyntaxNode>& key, const IMString& name);
 
         Sp<ClassBody> ParseClassBody(Scope& scope);
 
@@ -290,7 +291,7 @@ namespace jetpack::parser {
     };
 
     inline bool Parser::MatchAsyncFunction() {
-        bool match = MatchContextualKeyword(u"async");
+        bool match = MatchContextualKeyword(S_ASYNC);
         if (match) {
             auto state = ctx->scanner_->SaveState();
             std::vector<Sp<Comment>> comments;

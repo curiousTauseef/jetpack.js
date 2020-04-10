@@ -11,11 +11,12 @@
 using namespace jetpack;
 using namespace jetpack::parser;
 
+#define U16(C) IMString::FromUTF16(C)
+
 inline Sp<Module> ParseString(const std::string& src) {
-    auto u16src = std::make_shared<UString>();
     ParserContext::Config config = ParserContext::Config::Default();
+    IMString u16src = IMString::FromUTF8(src);
     auto ctx = std::make_shared<ParserContext>(u16src, config);
-    *u16src = utils::To_UTF16(src);
     Parser parser(ctx);
     return parser.ParseModule();
 }
@@ -31,17 +32,16 @@ inline std::string GenCode(Sp<Module> mod) {
 TEST(Scope, Collect) {
     std::string src = "var name = 3;";
 
-    auto u16src = std::make_shared<UString>();
     ParserContext::Config config = ParserContext::Config::Default();
+    IMString u16src = IMString::FromUTF8(src);
     auto ctx = std::make_shared<ParserContext>(u16src, config);
-    *u16src = utils::To_UTF16(src);
     Parser parser(ctx);
 
     auto mod = parser.ParseModule();
     mod->scope->ResolveAllSymbols(nullptr);
 
     EXPECT_EQ(mod->scope->own_variables.size(), 1);
-    EXPECT_TRUE(mod->scope->own_variables.find(u"name") != mod->scope->own_variables.end());
+    EXPECT_TRUE(mod->scope->own_variables.find(IMString::FromUTF8("name")) != mod->scope->own_variables.end());
 }
 
 TEST(Scope, Rename) {
@@ -51,11 +51,11 @@ TEST(Scope, Rename) {
     mod->scope->ResolveAllSymbols(nullptr);
 
     ModuleScope::ChangeSet changeset;
-    changeset.emplace_back(u"name", u"new_name");
+    changeset.emplace_back(IMString::FromUTF16(u"name"), IMString::FromUTF16(u"new_name"));
     EXPECT_TRUE(mod->scope->BatchRenameSymbols(changeset));
 
     EXPECT_EQ(mod->scope->own_variables.size(), 1);
-    EXPECT_TRUE(mod->scope->own_variables.find(u"name") == mod->scope->own_variables.end());
+    EXPECT_TRUE(mod->scope->own_variables.find(IMString::FromUTF8("name")) == mod->scope->own_variables.end());
 
     std::stringstream ss;
     CodeGen::Config code_gen_config;
@@ -71,11 +71,11 @@ TEST(Scope, RenameImportNamespace) {
     mod->scope->ResolveAllSymbols(nullptr);
 
     ModuleScope::ChangeSet changeset;
-    changeset.emplace_back(u"name", u"new_name");
+    changeset.emplace_back(IMString::FromUTF16(u"name"), IMString::FromUTF16(u"new_name"));
     EXPECT_TRUE(mod->scope->BatchRenameSymbols(changeset));
 
     EXPECT_EQ(mod->scope->own_variables.size(), 1);
-    EXPECT_TRUE(mod->scope->own_variables.find(u"name") == mod->scope->own_variables.end());
+    EXPECT_TRUE(mod->scope->own_variables.find(IMString::FromUTF8("name")) == mod->scope->own_variables.end());
 
     std::stringstream ss;
     CodeGen::Config code_gen_config;
@@ -99,10 +99,10 @@ TEST(Scope, RenameFunction1) {
     mod->scope->ResolveAllSymbols(nullptr);
 
     ModuleScope::ChangeSet changeset;
-    changeset.emplace_back(u"name", u"new_name");
+    changeset.emplace_back(IMString::FromUTF16(u"name"), IMString::FromUTF16(u"new_name"));
     EXPECT_TRUE(mod->scope->BatchRenameSymbols(changeset));
 
-    EXPECT_TRUE(mod->scope->own_variables.find(u"name") == mod->scope->own_variables.end());
+    EXPECT_TRUE(mod->scope->own_variables.find(IMString::FromUTF8("name")) == mod->scope->own_variables.end());
 
     std::stringstream ss;
     CodeGen::Config code_gen_config;
@@ -126,7 +126,7 @@ TEST(Scope, RenameFunction2) {
     mod->scope->ResolveAllSymbols(nullptr);
 
     ModuleScope::ChangeSet changeset;
-    changeset.emplace_back(u"ok", u"ok1");
+    changeset.emplace_back(IMString::FromUTF16(u"ok"), IMString::FromUTF16(u"ok1"));
     EXPECT_TRUE(mod->scope->BatchRenameSymbols(changeset));
 
     std::stringstream ss;
@@ -151,7 +151,7 @@ TEST(Scope, RenameFunction3) {
     mod->scope->ResolveAllSymbols(nullptr);
 
     ModuleScope::ChangeSet changeset;
-    changeset.emplace_back(u"name", u"rename");
+    changeset.emplace_back(U16(u"name"), U16(u"rename"));
     EXPECT_TRUE(mod->scope->BatchRenameSymbols(changeset));
 
     std::stringstream ss;
@@ -170,7 +170,7 @@ TEST(Scope, RenameObjectPattern) {
     mod->scope->ResolveAllSymbols(nullptr);
 
     ModuleScope::ChangeSet changeset;
-    changeset.emplace_back(u"other", u"renamed");
+    changeset.emplace_back(U16(u"other"), U16(u"renamed"));
     EXPECT_TRUE(mod->scope->BatchRenameSymbols(changeset));
 
     std::stringstream ss;
@@ -189,7 +189,7 @@ TEST(Scope, RenameObjectPattern2) {
     mod->scope->ResolveAllSymbols(nullptr);
 
     ModuleScope::ChangeSet changeset;
-    changeset.emplace_back(u"name", u"ok1");
+    changeset.emplace_back(U16(u"name"), U16(u"ok1"));
     EXPECT_FALSE(mod->scope->BatchRenameSymbols(changeset));
 
     std::stringstream ss;
@@ -208,7 +208,7 @@ TEST(Scope, RenameObjectPattern3) {
     mod->scope->ResolveAllSymbols(nullptr);
 
     ModuleScope::ChangeSet changeset;
-    changeset.emplace_back(u"name", u"renamed");
+    changeset.emplace_back(U16(u"name"), U16(u"renamed"));
     EXPECT_TRUE(mod->scope->BatchRenameSymbols(changeset));
 
     std::stringstream ss;
@@ -237,7 +237,7 @@ TEST(Scope, Cls) {
     mod->scope->ResolveAllSymbols(nullptr);
 
     ModuleScope::ChangeSet changeset;
-    changeset.emplace_back(u"print", u"renamed");
+    changeset.emplace_back(U16(u"print"), U16(u"renamed"));
     EXPECT_TRUE(mod->scope->BatchRenameSymbols(changeset));
 
     std::stringstream ss;
@@ -256,7 +256,7 @@ TEST(Scope, RenameImport) {
     mod->scope->ResolveAllSymbols(nullptr);
 
     ModuleScope::ChangeSet changeset;
-    changeset.emplace_back(u"name", u"renamed");
+    changeset.emplace_back(U16(u"name"), U16(u"renamed"));
     EXPECT_TRUE(mod->scope->BatchRenameSymbols(changeset));
 
     std::stringstream ss;
@@ -277,7 +277,7 @@ TEST(Scope, RenameImport3) {
     mod->scope->ResolveAllSymbols(nullptr);
 
     ModuleScope::ChangeSet changeset;
-    changeset.emplace_back(u"a", u"p");
+    changeset.emplace_back(U16(u"a"), U16(u"p"));
     EXPECT_TRUE(mod->scope->BatchRenameSymbols(changeset));
 
     auto import_decl = std::dynamic_pointer_cast<ImportDeclaration>(mod->body[0]);
@@ -298,7 +298,7 @@ TEST(Scope, RenameImportDefault) {
     mod->scope->ResolveAllSymbols(nullptr);
 
     ModuleScope::ChangeSet changeset;
-    changeset.emplace_back(u"React", u"Angular");
+    changeset.emplace_back(U16(u"React"), U16(u"Angular"));
     EXPECT_TRUE(mod->scope->BatchRenameSymbols(changeset));
 
     std::stringstream ss;
@@ -319,7 +319,7 @@ TEST(Scope, RenameImport2) {
     mod->scope->ResolveAllSymbols(nullptr);
 
     ModuleScope::ChangeSet changeset;
-    changeset.emplace_back(u"name", u"renamed");
+    changeset.emplace_back(U16(u"name"), U16(u"renamed"));
     EXPECT_TRUE(mod->scope->BatchRenameSymbols(changeset));
 
     std::stringstream ss;
@@ -340,7 +340,7 @@ TEST(Scope, RenameExport1) {
     mod->scope->ResolveAllSymbols(nullptr);
 
     ModuleScope::ChangeSet changeset;
-    changeset.emplace_back(u"name", u"renamed");
+    changeset.emplace_back(U16(u"name"), U16(u"renamed"));
     EXPECT_TRUE(mod->scope->BatchRenameSymbols(changeset));
 
     std::stringstream ss;
@@ -361,7 +361,7 @@ TEST(Scope, RenameExport2) {
     mod->scope->ResolveAllSymbols(nullptr);
 
     ModuleScope::ChangeSet changeset;
-    changeset.emplace_back(u"name", u"renamed");
+    changeset.emplace_back(U16(u"name"), U16(u"renamed"));
     EXPECT_TRUE(mod->scope->BatchRenameSymbols(changeset));
 
     std::stringstream ss;

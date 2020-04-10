@@ -13,8 +13,8 @@ namespace jetpack::parser {
     : ParserCommon(ctx), parent_(parent)  {
     }
 
-    UString JSXParser::GetQualifiedElementName(const Sp<SyntaxNode> &node) {
-        UString qualified_name;
+    IMString JSXParser::GetQualifiedElementName(const Sp<SyntaxNode> &node) {
+        IMString qualified_name;
 
         switch (node->type) {
             case SyntaxNodeType::JSXIdentifier: {
@@ -26,7 +26,7 @@ namespace jetpack::parser {
             case SyntaxNodeType::JSXNamespacedName: {
                 auto ns = dynamic_pointer_cast<JSXNamespacedName>(node);
                 qualified_name += GetQualifiedElementName(ns->namespace_);
-                qualified_name += u":";
+                qualified_name += IMString::FromUTF16(u":");
                 qualified_name += GetQualifiedElementName(ns->name);
                 break;
             }
@@ -34,7 +34,7 @@ namespace jetpack::parser {
             case SyntaxNodeType::JSXMemberExpression: {
                 auto expr = dynamic_pointer_cast<JSXMemberExpression>(node);
                 qualified_name += GetQualifiedElementName(expr->object);
-                qualified_name += u".";
+                qualified_name += IMString::FromUTF16(u".");
                 qualified_name += GetQualifiedElementName(expr->property);
                 break;
             }
@@ -58,7 +58,7 @@ namespace jetpack::parser {
         return elem;
     }
 
-    inline Sp<Identifier> MakeId(const UString& content) {
+    inline Sp<Identifier> MakeId(const IMString& content) {
         auto id = std::make_shared<Identifier>();
         id->name = content;
         return id;
@@ -68,9 +68,9 @@ namespace jetpack::parser {
         auto result = std::make_shared<CallExpression>();
 
         auto left = std::make_shared<MemberExpression>();
-        auto id = MakeId(u"React");
+        auto id = MakeId(IMString::FromUTF16(u"React"));
         left->object = id;
-        left->property = MakeId(u"createElement");
+        left->property = MakeId(IMString::FromUTF16(u"createElement"));
 
         scope.AddUnresolvedId(id);
 
@@ -79,12 +79,12 @@ namespace jetpack::parser {
         bool has_added_lit = false;
         if (jsx->opening_element->name->type == SyntaxNodeType::JSXIdentifier) {
             auto jsx_id = std::dynamic_pointer_cast<JSXIdentifier>(jsx->opening_element->name);
-            if (!jsx_id->name.empty()) {
+            if (!jsx_id->name.Empty()) {
                 char16_t ch = jsx_id->name[0];
                 if (ch >= u'a' && ch <= u'z') {
                     auto new_lit = std::make_shared<Literal>();
                     new_lit->str_ = jsx_id->name;
-                    new_lit->raw = u"\"" + jsx_id->name + u"\"";
+                    new_lit->raw = IMString::FromUTF16(u"\"") + jsx_id->name + IMString::FromUTF16(u"\"");
 
                     result->arguments.push_back(new_lit);
 
@@ -137,8 +137,8 @@ namespace jetpack::parser {
                         } else {
                             auto bool_lit = std::make_shared<Literal>();
                             bool_lit->ty = Literal::Ty::Boolean;
-                            bool_lit->raw = u"true";
-                            bool_lit->str_ = u"true";
+                            bool_lit->raw = IMString::FromUTF16(u"true");
+                            bool_lit->str_ = IMString::FromUTF16(u"true");
                             prop->value = std::move(bool_lit);
                         }
 
@@ -167,8 +167,8 @@ namespace jetpack::parser {
             if (!jsx->children.empty()) {
                 auto null_lit = std::make_shared<Literal>();
                 null_lit->ty = Literal::Ty::Null;
-                null_lit->str_ = u"null";
-                null_lit->raw = u"null";
+                null_lit->str_ = IMString::FromUTF16(u"null");
+                null_lit->raw = IMString::FromUTF16(u"null");
                 result->arguments.push_back(std::move(null_lit));
             }
         }
@@ -194,7 +194,7 @@ namespace jetpack::parser {
                     auto str_lit = std::make_shared<Literal>();
                     str_lit->ty = Literal::Ty::String;
                     str_lit->str_ = text->value;
-                    str_lit->raw = u"\"" + text->raw + u"\"";
+                    str_lit->raw = IMString::FromUTF16(u"\"") + text->raw + IMString::FromUTF16(u"\"");
 
                     result.push_back(std::move(str_lit));
                     break;
@@ -327,10 +327,10 @@ namespace jetpack::parser {
             } else if (element->type == SyntaxNodeType::JSXClosingElement) {
                 auto closing = dynamic_pointer_cast<JSXClosingElement>(element);
                 el->closing_ = { closing };
-                UString open = GetQualifiedElementName(el->opening_->name);
-                UString close = GetQualifiedElementName(closing->name);
+                IMString open = GetQualifiedElementName(el->opening_->name);
+                IMString close = GetQualifiedElementName(closing->name);
                 if (open != close) {
-                    TolerateError(fmt::format("Expected corresponding JSX closing tag for {}", utils::To_UTF8(open)));
+                    TolerateError(fmt::format("Expected corresponding JSX closing tag for {}", open.ToString()));
                 }
                 if (!el_stack.empty()) {
                     auto node = Alloc<JSXElement>();
@@ -535,7 +535,7 @@ namespace jetpack::parser {
 
         auto start = scanner.Index();
 
-        UString text;
+        std::u16string text;
         while (!scanner.IsEnd()) {
             char16_t ch = scanner.CharAt(scanner.Index());
             if (ch == u'{' || ch == u'<') {
@@ -559,7 +559,7 @@ namespace jetpack::parser {
         });
 
         Token token;
-        token.value_ = move(text);
+        token.value_ = IMString::FromUTF16(text.c_str(), text.size());
         token.line_number_ = scanner.LineNumber();
         token.line_start_ = scanner.LineStart();
         token.range_ = {
@@ -581,49 +581,49 @@ namespace jetpack::parser {
             case u'<': {
                 scanner.IncreaseIndex();
                 token.type_ = JsTokenType::LessThan;
-                token.value_.push_back(cp);
+                token.value_ = IMString::FromUTF16(cp);
                 break;
             }
 
             case u'>': {
                 scanner.IncreaseIndex();
                 token.type_ = JsTokenType::GreaterThan;
-                token.value_.push_back(cp);
+                token.value_ = IMString::FromUTF16(cp);
                 break;
             }
 
             case u'/': {
                 scanner.IncreaseIndex();
                 token.type_ = JsTokenType::Div;
-                token.value_.push_back(cp);
+                token.value_ = IMString::FromUTF16(cp);
                 break;
             }
 
             case u':': {
                 scanner.IncreaseIndex();
                 token.type_ = JsTokenType::Colon;
-                token.value_.push_back(cp);
+                token.value_ = IMString::FromUTF16(cp);
                 break;
             }
 
             case u'=': {
                 scanner.IncreaseIndex();
                 token.type_ = JsTokenType::Assign;
-                token.value_.push_back(cp);
+                token.value_ = IMString::FromUTF16(cp);
                 break;
             }
 
             case u'{': {
                 scanner.IncreaseIndex();
                 token.type_ = JsTokenType::LeftBracket;
-                token.value_.push_back(cp);
+                token.value_ = IMString::FromUTF16(cp);
                 break;
             }
 
             case u'}': {
                 scanner.IncreaseIndex();
                 token.type_ = JsTokenType::RightBracket;
-                token.value_.push_back(cp);
+                token.value_ = IMString::FromUTF16(cp);
                 break;
             }
 
@@ -632,7 +632,7 @@ namespace jetpack::parser {
                 auto start = scanner.Index();
                 char16_t quote = cp;
                 scanner.IncreaseIndex();
-                UString str;
+                std::u16string str;
                 while (!scanner.IsEnd()) {
                     char16_t ch = scanner.CharAt(scanner.Index());
                     scanner.IncreaseIndex();
@@ -646,7 +646,7 @@ namespace jetpack::parser {
                 }
 
                 token.type_ = JsTokenType::StringLiteral;
-                token.value_ = move(str);
+                token.value_ = IMString::FromUTF16(str.c_str(), str.size());
                 token.line_number_ = scanner.LineNumber();
                 token.line_start_ = scanner.LineStart();
                 token.range_ = {
@@ -661,7 +661,7 @@ namespace jetpack::parser {
                 auto index = scanner.Index();
                 char16_t n1 = scanner.CharAt(index + 1);
                 char16_t n2 = scanner.CharAt(index + 2);
-                UString value;
+                std::u16string value;
 
                 if (n1 == u'.' && n2 == u'.') {
                     token.type_ = JsTokenType::Spread;
@@ -673,6 +673,7 @@ namespace jetpack::parser {
 
                 scanner.SetIndex(index + value.size());
 
+                token.value_ = IMString::FromUTF16(value.c_str(), value.size());
                 token.line_number_ = scanner.LineNumber();
                 token.line_start_ = scanner.LineStart();
                 token.range_ = {
@@ -723,8 +724,7 @@ namespace jetpack::parser {
                     break;
                 }
             }
-            UString id = scanner.Source()
-                ->substr(start, scanner.Index() - start);
+            IMString id = scanner.Source().Slice(start, scanner.Index());
 
             token.type_ = JsTokenType::Identifier;
             token.value_ = move(id);
@@ -740,8 +740,8 @@ namespace jetpack::parser {
         return scanner.Lex();
     }
 
-    UString JSXParser::ScanXHTMLEntity(char16_t quote) {
-        UString result = u"&";
+    std::u16string JSXParser::ScanXHTMLEntity(char16_t quote) {
+        std::u16string result = u"&";
 
         bool valid = true;
         bool terminated = false;
@@ -787,7 +787,7 @@ namespace jetpack::parser {
             InitXHTMLEntities();
 
             // e.g. '&#x41;' becomes just '#x41'
-            UString str = result.substr(1, result.size() - 2);
+            std::u16string str = result.substr(1, result.size() - 2);
             if (numeric && str.size() > 1) {
                 std::string utf8 = utils::To_UTF8(str.substr(1));
                 result.push_back(std::stoi(utf8));

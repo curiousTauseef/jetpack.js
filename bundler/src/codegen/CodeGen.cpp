@@ -6,6 +6,7 @@
 #include <iostream>
 #include <algorithm>
 #include <scope/Variable.h>
+#include <parser/JsKeywordsContants.h>
 
 using namespace std;
 
@@ -13,10 +14,10 @@ using namespace std;
 
 namespace jetpack {
 
-#define DEF_OP_PREC(OP_STR, OP_VAL) } else if (op == OP_STR) { \
+#define DEF_OP_PREC(OP_STR, OP_VAL) } else if (op == IMString::FromUTF16(OP_STR)) { \
     return OP_VAL;
 
-    inline int BinaryStrPrecedence(const std::u16string& op) {
+    inline int BinaryStrPrecedence(const IMString& op) {
         if (false) {
 
         DEF_OP_PREC(u"||", 1)
@@ -46,9 +47,9 @@ namespace jetpack {
         DEF_OP_PREC(u"/", 11)
         DEF_OP_PREC(u"%", 11)
 
-        } else if (op == u"instanceof") {
+        } else if (op == S_INSTANCEOF) {
             return 7;
-        } else if (op == u"in") {
+        } else if (op == S_IN) {
             return 7;
         }
 
@@ -583,7 +584,7 @@ namespace jetpack {
                     i++;
                 } else if (spec->type == SyntaxNodeType::ImportNamespaceSpecifier) {
                     auto namespace_ = dynamic_pointer_cast<ImportNamespaceSpecifier>(spec);
-                    UString temp = u"* as " + namespace_->local->name;
+                    std::string temp = "* as " + namespace_->local->name.ToString();
                     Write(temp, namespace_);
                     i++;
                 } else {
@@ -597,7 +598,7 @@ namespace jetpack {
                     auto import_ = dynamic_pointer_cast<ImportSpecifier>(spec);
                     Write(import_->imported->name, spec);
                     if (import_->imported->name != import_->local->name) {
-                        UString temp = u" as " + import_->local->name;
+                        std::string temp = " as " + import_->local->name.ToString();
                         Write(temp);
                     }
                     if (++i < node->specifiers.size()) {
@@ -635,7 +636,7 @@ namespace jetpack {
                 for (auto& spec : node->specifiers) {
                     Write(spec->local->name, spec);
                     if (spec->local->name != spec->exported->name) {
-                        UString temp = u" as " + spec->exported->name;
+                        std::string temp = " as " + spec->exported->name.ToString();
                         Write(temp);
                     }
                     if (++i < node->specifiers.size()) {
@@ -878,7 +879,7 @@ namespace jetpack {
     void CodeGen::Traverse(const Sp<UnaryExpression> &node) {
         if (node->prefix) {
             Write(node->operator_);
-            if (node->operator_.size() > 1) {
+            if (node->operator_.Size() > 1) {
                 Write(" ");
             }
             if (ExpressionPrecedence(node->argument) <
@@ -901,7 +902,7 @@ namespace jetpack {
         if (config_.minify) {
             Write(node->operator_);
         } else {
-            Write(UString(u" ") + node->operator_ + u" ");
+            Write(" " + node->operator_.ToString() + " ");
         }
         TraverseNode(node->right);
     }
@@ -918,10 +919,10 @@ namespace jetpack {
             Write("(");
         }
         FormatBinaryExpression(node->left, node, false);
-        if (config_.minify && node->operator_ != u"in" && node->operator_ != u"instanceof") {
+        if (config_.minify && node->operator_ != S_IN && node->operator_ != S_INSTANCEOF) {
             Write(node->operator_);
         } else {
-            Write(u" " + node->operator_ + u" ");
+            Write(" " + node->operator_.ToString() + " ");
         }
         FormatBinaryExpression(node->right, node, true);
         if (is_in) {
@@ -999,9 +1000,9 @@ namespace jetpack {
     void CodeGen::Traverse(const Sp<Literal> &lit) {
         if (config_.minify && lit->ty == Literal::Ty::Boolean) {
             if (lit->raw == u"true") {
-                Write(u"!0");
+                Write("!0");
             } else {
-                Write(u"!1");
+                Write("!1");
             }
         } else {
             Write(lit->raw, lit);
